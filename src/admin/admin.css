@@ -574,6 +574,11 @@ body {
   color: #c4c6cf;
 }
 
+.adm-note a {
+  color: #cfc4ff;
+  text-decoration: underline;
+}
+
 .adm-note svg {
   flex: none;
   margin-top: 1px;

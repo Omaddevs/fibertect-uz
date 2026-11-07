@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Info, TrendingDown, TrendingUp } from 'lucide-react'
 import { api, formatNumber } from './api.js'
 
+const SEARCH_CONSOLE_URL = 'https://search.google.com/search-console/performance/search-analytics?resource_id=sc-domain%3Afibertech.uz'
 const RANGES = [7, 30, 90]
 const SOURCE_LABELS = { search: 'Qidiruv tizimlari', social: 'Ijtimoiy tarmoqlar', link: 'Boşqa saytlardagi havolalar', direct: 'Töğridan-töğri kirganlar' }
 const DEVICE_LABELS = { desktop: 'Kompyuter', mobile: 'Telefon', tablet: 'Planşet' }
@@ -229,7 +230,10 @@ export default function Analytics() {
               <BarList rows={toRows(report.terms)} empty="Hozirça sözlar yöq." />
               <p className="adm-note">
                 <Info size={16} aria-hidden="true" />
-                Google va köp qidiruv tizimlari qidirilgan sözni saytga bermaydi. Bu yerda faqat söz yetib kelgan holatlar körinadi. Google’dagi töliq röyxat uçun Google Search Console kerak.
+                <span>
+                  Google va köp qidiruv tizimlari qidirilgan sözni saytga bermaydi. Bu yerda faqat söz yetib kelgan holatlar körinadi.{' '}
+                  <a href={SEARCH_CONSOLE_URL} target="_blank" rel="noreferrer">Google’dagi töliq röyxatni Search Console’da köring</a>.
+                </span>
               </p>
             </section>
 
