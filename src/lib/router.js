@@ -1,7 +1,7 @@
 // Kichik router: manzillar toza (fibertech.uz/blog), `#` ishlatilmaydi.
 // Sahifa ichidagi havolalar oddiy <a href="/blog"> bo'lib qoladi: yangi oynada ochiladi, Google ham o'qiydi.
 import { useSyncExternalStore } from 'react'
-import { BLOG_PATH, PROJECT_SLUGS, SECTIONS, SERVICE_SLUGS, SITE_URL, slugAfter } from '../data/routes.js'
+import { BLOG_PATH, SECTIONS, SERVICE_SLUGS, SITE_URL, slugAfter } from '../data/routes.js'
 
 const listeners = new Set()
 const normalize = (pathname) => pathname.replace(/\/+$/, '') || '/'
@@ -43,7 +43,8 @@ export function navigate(path, { replace = false } = {}) {
 const isKnownClientPath = (path) => {
   if (path === '/' || path === BLOG_PATH || SECTIONS[path] || slugAfter(path, BLOG_PATH)) return true
   const project = slugAfter(path, '/projects')
-  if (project) return PROJECT_SLUGS.includes(project)
+  // Loyihalar serverdan keladi: mavjudligini ma'lumot yuklangach Works tekshiradi.
+  if (project) return /^[a-z0-9-]+$/.test(project)
   const service = slugAfter(path, '/services')
   return service ? SERVICE_SLUGS.includes(service) : false
 }

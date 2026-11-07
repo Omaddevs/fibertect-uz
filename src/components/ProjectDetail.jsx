@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Share2 } from 'lucide-react'
-import { projects, serviceImages, technologies, projectTechnologies } from '../data/content.js'
+import { technologies, projectTechnologies } from '../data/content.js'
+import { useSiteData } from '../data/SiteData.jsx'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 import { techIcons } from '../data/techIcons.js'
 import { PROJECTS_PATH } from '../data/routes.js'
@@ -77,24 +78,22 @@ export function useDetailPage(onClose) {
 }
 
 export default function ProjectDetail({ slug, onClose }) {
-  const { t } = useLanguage()
-  const { works, services, nav } = t
+  const { t, lang } = useLanguage()
+  const { projects } = useSiteData()
+  const { works, nav } = t
   const d = works.detail
   const root = useRef(null)
   const [copied, setCopied] = useState(false)
 
   const index = projects.findIndex((p) => p.slug === slug)
   const project = projects[index]
-  const copy = works.items[index]
+  const copy = project.texts[lang]
+  const techKeys = project.tech.filter((key) => allTech.some((x) => x.icon === key))
 
-  // Asosiy rasm va galereya bitta mozaikada. Raqam: serviceImages dagi umumiy rasm.
+  // Asosiy rasm va galereya bitta mozaikada.
   const shots = [
     { src: project.image, width: project.width, height: project.height, alt: copy.alt },
-    ...project.gallery.map((g, i) =>
-      typeof g === 'number'
-        ? { src: serviceImages[g], width: 1160, height: 1348, alt: services.items[g].alt }
-        : { ...g, alt: copy.galleryAlt[i] },
-    ),
+    ...project.gallery.map((g, i) => ({ ...g, alt: copy.galleryAlt?.[i] ?? '' })),
   ]
 
   useDetailPage(onClose)
@@ -157,10 +156,12 @@ export default function ProjectDetail({ slug, onClose }) {
                   </span>
                 )}
 
-                <div className="project__stack">
-                  <h2 className="project__label">{d.tech}</h2>
-                  <TechCarousel keys={project.tech} />
-                </div>
+                {techKeys.length > 0 && (
+                  <div className="project__stack">
+                    <h2 className="project__label">{d.tech}</h2>
+                    <TechCarousel keys={techKeys} />
+                  </div>
+                )}
 
                 <div className="project__actions">
                   <button type="button" className="project__action" onClick={share}>
@@ -190,7 +191,7 @@ export default function ProjectDetail({ slug, onClose }) {
                   4 va undan ko'p rasmda birinchisi alohida qatorni egallaydi. */}
               <div className={`project__mosaic ${shots.length > 3 ? 'project__mosaic--lead' : ''}`}>
                 {shots.map((shot, i) => (
-                  <figure className="project__shot" style={{ flexGrow: shot.width / shot.height }} key={shot.src}>
+                  <figure className="project__shot" style={{ flexGrow: shot.width / shot.height }} key={`${shot.src}-${i}`}>
                     <img src={shot.src} alt={shot.alt} width={shot.width} height={shot.height} loading={i === 0 ? undefined : 'lazy'} />
                   </figure>
                 ))}
@@ -208,7 +209,7 @@ export default function ProjectDetail({ slug, onClose }) {
           <ul className="project__related">
             {projects.map((p, i) => {
               if (i === index) return null
-              const w = works.items[i]
+              const w = p.texts[lang]
               return (
                 <li key={p.slug}>
                   <a className="project-rel" href={`${PROJECTS_PATH}/${p.slug}`} onClick={(e) => goTo(e, p.slug)}>

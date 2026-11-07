@@ -41,7 +41,13 @@ export function classifyReferrer(referrer, ownHost) {
   return { sourceType: SOCIAL.test(host) ? 'social' : 'link', host, url: clean, engine: null, term: null }
 }
 
+export const EVENT_TYPES = ['form', 'telegram', 'email']
+
 export function createAnalytics(db, { secret, countryOf }) {
+  // IP manzil saqlanmaydi. Xesh har kuni o'zgaradi: odamni kunlar orasida kuzatib bo'lmaydi.
+  const visitorOf = (day, ip, userAgent) => createHash('sha256').update(`${secret}|${day}|${ip}|${userAgent}`).digest('hex').slice(0, 24)
+  const insertEvent = db.prepare('INSERT INTO events (day, visitor, type) VALUES (?, ?, ?)')
+
   const insert = db.prepare(`
     INSERT INTO page_views (day, visitor, path, entry, source_type, ref_host, ref_url, search_engine, search_term, utm_source, utm_campaign, country, device, lang)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -54,8 +60,7 @@ export function createAnalytics(db, { secret, countryOf }) {
       if (!path || !/^\/[\w/-]*$/.test(path)) return false
 
       const day = dayOf()
-      // IP manzil saqlanmaydi. Xesh har kuni o'zgaradi: odamni kunlar orasida kuzatib bo'lmaydi.
-      const visitor = createHash('sha256').update(`${secret}|${day}|${ip}|${userAgent}`).digest('hex').slice(0, 24)
+      const visitor = visitorOf(day, ip, userAgent)
       const entry = payload.entry === true
       const source = entry ? classifyReferrer(clip(payload.referrer, 2000), ownHost) : null
       const device = /mobile|android|iphone/i.test(userAgent) ? 'mobile' : /ipad|tablet/i.test(userAgent) ? 'tablet' : 'desktop'
@@ -67,6 +72,14 @@ export function createAnalytics(db, { secret, countryOf }) {
         entry ? clip(payload.utmSource, 80) : null, entry ? clip(payload.utmCampaign, 80) : null,
         headerCountry ?? countryOf(ip), device, clip(payload.lang, 5),
       )
+      return true
+    },
+
+    // Natija: ariza yuborildi, Telegram yoki email bosildi.
+    recordEvent({ type, ip, userAgent }) {
+      if (!EVENT_TYPES.includes(type) || !userAgent || BOT.test(userAgent)) return false
+      const day = dayOf()
+      insertEvent.run(day, visitorOf(day, ip, userAgent), type)
       return true
     },
 
@@ -90,8 +103,27 @@ export function createAnalytics(db, { secret, countryOf }) {
       const entries = db.prepare(`SELECT source_type name, ${VISITORS} visitors FROM page_views WHERE day >= ? AND entry = 1 GROUP BY source_type ORDER BY visitors DESC`).all(from)
       const knownCountries = db.prepare(`SELECT ${VISITORS} visitors FROM page_views WHERE day >= ? AND country IS NOT NULL`).get(from).visitors
 
+      // Har bir natija tashrif buyuruvchining o'sha kundagi birinchi kirishi manbasiga yoziladi.
+      const eventCounts = Object.fromEntries(db.prepare('SELECT type, COUNT(*) n FROM events WHERE day >= ? GROUP BY type').all(from).map((r) => [r.type, r.n]))
+      const converted = db.prepare(`SELECT ${VISITORS} visitors FROM events WHERE day >= ?`).get(from).visitors
+      const bySource = db.prepare(`
+        SELECT COALESCE((
+          SELECT pv.source_type FROM page_views pv
+          WHERE pv.day = e.day AND pv.visitor = e.visitor AND pv.entry = 1 ORDER BY pv.id LIMIT 1
+        ), 'direct') name, COUNT(DISTINCT e.day || e.visitor) visitors
+        FROM events e WHERE e.day >= ? GROUP BY name ORDER BY visitors DESC
+      `).all(from)
+
       return {
         days,
+        conversions: {
+          form: eventCounts.form ?? 0,
+          telegram: eventCounts.telegram ?? 0,
+          email: eventCounts.email ?? 0,
+          visitors: converted,
+          rate: totals.visitors ? Math.round((converted / totals.visitors) * 1000) / 10 : 0,
+          bySource,
+        },
         totals: { ...totals, today: today.visitors, todayViews: today.views, previousVisitors: previous.visitors, previousViews: previous.views },
         daily: dayList.map((day) => ({ day, visitors: perDay.get(day)?.visitors ?? 0, views: perDay.get(day)?.views ?? 0 })),
         sourceTypes: entries,

@@ -9,8 +9,7 @@ export const SECTIONS = {
   '/contact': 'contact',
 }
 
-// content.js dagi `projects` va `serviceDetails` manzillari bilan bir xil bo'lsin.
-export const PROJECT_SLUGS = ['iau', 'oak', 'taxiline', 'ayolqadami']
+// content.js dagi `serviceDetails` manzillari bilan bir xil bo'lsin. Loyihalar admin paneldan boshqariladi.
 export const SERVICE_SLUGS = ['websites', 'web-apps', 'mobile-apps', 'ui-ux', 'telegram-bots', 'branding']
 
 export const PROJECTS_PATH = '/projects'
@@ -22,10 +21,10 @@ export function slugAfter(path, base) {
   return path.startsWith(`${base}/`) ? path.slice(base.length + 1) : null
 }
 
-export function isKnownPath(path, postSlugs) {
+export function isKnownPath(path, postSlugs, projectSlugs) {
   if (path === '/' || path === BLOG_PATH || SECTIONS[path]) return true
   const project = slugAfter(path, PROJECTS_PATH)
-  if (project) return PROJECT_SLUGS.includes(project)
+  if (project) return projectSlugs.includes(project)
   const service = slugAfter(path, SERVICES_PATH)
   if (service) return SERVICE_SLUGS.includes(service)
   const post = slugAfter(path, BLOG_PATH)

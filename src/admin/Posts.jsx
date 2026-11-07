@@ -1,14 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, Check, CircleDashed, ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react'
 import ServiceArt from '../components/ServiceArt.jsx'
-import { formatBody, parseBody } from '../lib/postFormat.js'
+import { formatBody, imageFromParagraph, parseBody } from '../lib/postFormat.js'
 import { api } from './api.js'
+import { ImageField, LANGS, UploadButton } from './shared.jsx'
 
-const LANGS = [
-  { code: 'uz', label: 'Özbekça' },
-  { code: 'ru', label: 'Русский' },
-  { code: 'en', label: 'English' },
-]
 const ART_NAMES = ['Sayt', 'Boşqaruv paneli', 'Mobil ilova', 'Dizayn', 'Telegram bot', 'Brending']
 const BODY_HINT = '## Bölim sarlavhasi\n\nOddiy xatboşi. Xatboşilar orasida böş qator qoldiring.\n\n- Röyxat bandi\n- Yana bir band'
 
@@ -27,6 +23,7 @@ const newDraft = () => ({
   slug: '',
   date: today(),
   art: 0,
+  cover: '',
   status: 'draft',
   texts: { uz: emptyText(), ru: emptyText(), en: emptyText() },
 })
@@ -41,6 +38,7 @@ const toPayload = (draft) => ({
   slug: draft.slug,
   date: draft.date,
   art: draft.art,
+  cover: draft.cover,
   status: draft.status,
   texts: Object.fromEntries(LANGS.map(({ code }) => {
     const { body, ...rest } = draft.texts[code]
@@ -61,6 +59,7 @@ function StatusBadge({ status }) {
 }
 
 function Editor({ initial, onBack, onSaved }) {
+  const body = useRef(null)
   const [draft, setDraft] = useState(initial)
   const [baseline, setBaseline] = useState(() => JSON.stringify(initial))
   const [lang, setLang] = useState('uz')
@@ -91,6 +90,14 @@ function Editor({ initial, onBack, onSaved }) {
   const set = (patch) => {
     setNotice('')
     setDraft((d) => ({ ...d, ...patch }))
+  }
+
+  // Rasm kursor turgan joyga alohida xatboshi bo'lib qo'yiladi.
+  const insertImage = ({ url }) => {
+    const position = body.current?.selectionStart ?? text.body.length
+    const before = text.body.slice(0, position).trimEnd()
+    const after = text.body.slice(position).trimStart()
+    setText('body', [before, `![](${url})`, after].filter(Boolean).join('\n\n'))
   }
 
   const back = () => {
@@ -169,9 +176,12 @@ function Editor({ initial, onBack, onSaved }) {
             </label>
             <label className="adm-field">
               <span>Matn</span>
-              <textarea className="adm-body" lang={lang} rows={16} value={text.body} placeholder={BODY_HINT} onChange={(e) => setText('body', e.target.value)} />
-              <small>## bilan bölim sarlavhasi, - bilan röyxat bandi, böş qator bilan yangi xatboşi.</small>
+              <textarea ref={body} className="adm-body" lang={lang} rows={16} value={text.body} placeholder={BODY_HINT} onChange={(e) => setText('body', e.target.value)} />
+              <small>## bilan bölim sarlavhasi, - bilan röyxat bandi, böş qator bilan yangi xatboşi. Rasm izohi: ![izoh](manzil).</small>
             </label>
+            <div>
+              <UploadButton label="Matnga rasm qöşiş" onUploaded={insertImage} onError={setError} />
+            </div>
           </section>
 
           <section className="adm-card adm-panel">
@@ -195,8 +205,9 @@ function Editor({ initial, onBack, onSaved }) {
                 <small>{draft.isNew ? 'Lotin harflari, raqam va chiziqça.' : 'Havolalar buzilmasligi uçun özgarmaydi.'}</small>
               </label>
             </div>
+            <ImageField label="Muqova rasmi" value={draft.cover} hint="Yuklansa, pastdagi tayyor muqova örniga körinadi." onChange={({ url }) => set({ cover: url })} />
             <fieldset className="adm-arts">
-              <legend>Muqova</legend>
+              <legend>Tayyor muqova</legend>
               {ART_NAMES.map((name, i) => (
                 <label key={name} className={draft.art === i ? 'is-active' : ''}>
                   <input type="radio" name="art" checked={draft.art === i} onChange={() => set({ art: i })} />
@@ -210,7 +221,7 @@ function Editor({ initial, onBack, onSaved }) {
 
         <aside className="adm-card adm-preview" aria-label="Oldindan köriş">
           <p className="adm-preview__label">Oldindan köriş · {lang.toUpperCase()}</p>
-          <div className="adm-preview__cover"><ServiceArt index={draft.art} slice /></div>
+          <div className="adm-preview__cover">{draft.cover ? <img className="blog-cover-img" src={draft.cover} alt="" /> : <ServiceArt index={draft.art} slice />}</div>
           {text.category && <span className="blog-meta__tag">{text.category}</span>}
           <h2 className="adm-preview__title">{text.title || 'Sarlavha'}</h2>
           {text.excerpt && <p className="adm-preview__lead">{text.excerpt}</p>}
@@ -218,7 +229,12 @@ function Editor({ initial, onBack, onSaved }) {
             {preview.map((s, n) => (
               <section className="blog-post__section" key={n}>
                 {s.h && <h2>{s.h}</h2>}
-                {s.p.map((para, k) => <p key={k}>{para}</p>)}
+                {s.p.map((para, k) => {
+                  const image = imageFromParagraph(para)
+                  return image
+                    ? <figure className="blog-post__figure" key={k}><img src={image.src} alt={image.alt} />{image.alt && <figcaption>{image.alt}</figcaption>}</figure>
+                    : <p key={k}>{para}</p>
+                })}
                 {s.list && <ul>{s.list.map((item, k) => <li key={k}>{item}</li>)}</ul>}
               </section>
             ))}
@@ -276,7 +292,7 @@ export default function Posts() {
         <ul className="adm-posts">
           {posts.map((post) => (
             <li className="adm-card adm-post" key={post.slug}>
-              <span className="adm-post__cover"><ServiceArt index={post.art} slice /></span>
+              <span className="adm-post__cover">{post.cover ? <img className="blog-cover-img" src={post.cover} alt="" /> : <ServiceArt index={post.art} slice />}</span>
               <div className="adm-post__text">
                 <h2>{post.texts.uz?.title || post.slug}</h2>
                 <p>{post.date} · {post.texts.uz?.category || 'Kategoriyasiz'}</p>

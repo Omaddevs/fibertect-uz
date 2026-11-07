@@ -32,6 +32,13 @@ export function startTracking() {
     utmTerm: params.get('utm_term') ?? '',
   })
 
+  // Natijalar: Telegram yoki email havolasi bosildi. Formani server o'zi sanaydi.
+  document.addEventListener('click', (e) => {
+    const href = e.target.closest?.('a[href]')?.getAttribute('href') ?? ''
+    if (href.startsWith('https://t.me/')) send({ event: 'telegram' })
+    else if (href.startsWith('mailto:')) send({ event: 'email' })
+  })
+
   subscribe(() => {
     const path = pagePath()
     if (path === last) return

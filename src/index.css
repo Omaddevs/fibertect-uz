@@ -3457,3 +3457,28 @@ a.service-card__inner:focus-visible {
     transition: none;
   }
 }
+
+/* Admin paneldan yuklangan blog rasmlari */
+.blog-cover-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.blog-post__figure {
+  margin: 24px 0;
+}
+
+.blog-post__figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+}
+
+.blog-post__figure figcaption {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  opacity: 0.7;
+}

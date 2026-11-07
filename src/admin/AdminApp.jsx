@@ -1,15 +1,23 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowUpRight, BarChart3, Eye, EyeOff, FileText, LogOut, Tag } from 'lucide-react'
+import { ArrowUpRight, BarChart3, Briefcase, Eye, EyeOff, FileText, Inbox, LogOut, Settings as SettingsIcon, Tag, Users } from 'lucide-react'
 import { Wordmark } from '../components/Logo.jsx'
 import Analytics from './Analytics.jsx'
 import { SESSION_EXPIRED, api } from './api.js'
+import ClientsAdmin from './ClientsAdmin.jsx'
+import Leads from './Leads.jsx'
 import Posts from './Posts.jsx'
 import Prices from './Prices.jsx'
+import Projects from './Projects.jsx'
+import Settings from './Settings.jsx'
 
 const SECTIONS = [
   { id: 'stats', path: '/admin', label: 'Statistika', icon: BarChart3, Page: Analytics },
+  { id: 'leads', path: '/admin/leads', label: 'Arizalar', icon: Inbox, Page: Leads },
+  { id: 'projects', path: '/admin/projects', label: 'Loyihalar', icon: Briefcase, Page: Projects },
+  { id: 'clients', path: '/admin/clients', label: 'Mijozlar', icon: Users, Page: ClientsAdmin },
   { id: 'prices', path: '/admin/prices', label: 'Narxlar', icon: Tag, Page: Prices },
   { id: 'posts', path: '/admin/blog', label: 'Blog', icon: FileText, Page: Posts },
+  { id: 'settings', path: '/admin/settings', label: 'Sozlamalar', icon: SettingsIcon, Page: Settings },
 ]
 
 function Login({ onDone }) {
@@ -70,6 +78,15 @@ const sectionFromPath = () => {
 export default function AdminApp() {
   const [authed, setAuthed] = useState(null)
   const [section, setSection] = useState(sectionFromPath)
+  const [newLeads, setNewLeads] = useState(0)
+
+  const refreshLeads = useCallback(() => {
+    api('/leads/summary').then((data) => setNewLeads(data.new)).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (authed) refreshLeads()
+  }, [authed, section, refreshLeads])
 
   useEffect(() => {
     api('/me').then(() => setAuthed(true)).catch(() => setAuthed(false))
@@ -111,6 +128,7 @@ export default function AdminApp() {
             <a key={id} href={path} onClick={(e) => go(e, item)} aria-current={section === id ? 'page' : undefined}>
               <Icon size={19} strokeWidth={1.7} aria-hidden="true" />
               {label}
+              {id === 'leads' && newLeads > 0 && <span className="adm-count" aria-label={`${newLeads} ta yangi`}>{newLeads}</span>}
             </a>
             )
           })}
@@ -127,7 +145,7 @@ export default function AdminApp() {
         </div>
       </aside>
       <main className="adm-main">
-        <Page />
+        <Page onLeadsChanged={refreshLeads} />
       </main>
     </div>
   )

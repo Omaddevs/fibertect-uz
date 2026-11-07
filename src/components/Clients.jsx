@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import 'swiper/css'
 import { ArrowLeft, ArrowRight, Building2, User } from 'lucide-react'
-import { clients, testimonials } from '../data/content.js'
+import { useSiteData } from '../data/SiteData.jsx'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 
 // Namunaviy kartalar faqat `npm run dev` rejimida ko'rinadi. Build qilingan saytga
@@ -11,10 +11,10 @@ const SAMPLES = import.meta.env.DEV
 const MIN_CLIENT_CARDS = 8
 const SAMPLE_QUOTES = 4
 
-// Mijoz "Bizning ishlar"dagi loyiha bo'lsa, nomi joriy tilda shu loyihadan olinadi.
-const clientName = (c, t) => t.works.items[c.project]?.name ?? c.name
+function ClientGrid({ t, lang, clients, projects }) {
+  // Mijoz "Bizning ishlar"dagi loyiha bo'lsa, nomi joriy tilda shu loyihadan olinadi.
+  const clientName = (c) => projects.find((p) => p.slug === c.project)?.texts[lang]?.name ?? c.name
 
-function ClientGrid({ t }) {
   // Bento naqshi buzilmasligi uchun to'r 4 ga karrali songacha bo'sh kartalar bilan to'ldiriladi.
   const lastCard = Math.max(clients.length, ...clients.map((c) => c.slot ?? 0))
   const total = Math.max(MIN_CLIENT_CARDS, Math.ceil(lastCard / 4) * 4)
@@ -29,14 +29,14 @@ function ClientGrid({ t }) {
       <ul className="clients__grid">
         {cards.map((c, i) =>
           c ? (
-            <li className="client-card" key={c.name}>
+            <li className="client-card" key={c.id}>
               {c.url ? (
                 <a className="client-card__inner" href={c.url} target="_blank" rel="noopener noreferrer">
-                  <img src={c.logo} alt={clientName(c, t)} loading="lazy" />
+                  <img src={c.logo} alt={clientName(c)} loading="lazy" />
                 </a>
               ) : (
                 <span className="client-card__inner">
-                  <img src={c.logo} alt={clientName(c, t)} loading="lazy" />
+                  <img src={c.logo} alt={clientName(c)} loading="lazy" />
                 </span>
               )}
             </li>
@@ -78,7 +78,7 @@ function QuoteCard({ logo, logoAlt, text, name, role, photo }) {
 
 const pad = (n) => String(n).padStart(2, '0')
 
-function Testimonials({ t, lang }) {
+function Testimonials({ t, lang, testimonials }) {
   const swiper = useRef(null)
   const [position, setPosition] = useState({ index: 0, total: 1 })
   const samples = SAMPLES && testimonials.length === 0
@@ -90,7 +90,7 @@ function Testimonials({ t, lang }) {
         role: t.testimonials.role,
       }))
     : testimonials.map((q) => ({
-        key: q.name,
+        key: q.id,
         text: q.quote[lang],
         name: q.name,
         role: q.role[lang],
@@ -165,6 +165,7 @@ function Testimonials({ t, lang }) {
 
 export default function Clients() {
   const { t, lang } = useLanguage()
+  const { clients, projects, testimonials } = useSiteData()
   const showClients = SAMPLES || clients.length > 0
   const showQuotes = SAMPLES || testimonials.length > 0
   if (!showClients && !showQuotes) return null
@@ -172,8 +173,8 @@ export default function Clients() {
   return (
     <section className="clients" id="clients">
       <div className="clients__inner">
-        {showClients && <ClientGrid t={t} />}
-        {showQuotes && <Testimonials t={t} lang={lang} />}
+        {showClients && <ClientGrid t={t} lang={lang} clients={clients} projects={projects} />}
+        {showQuotes && <Testimonials t={t} lang={lang} testimonials={testimonials} />}
       </div>
     </section>
   )

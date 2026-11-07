@@ -1,5 +1,6 @@
 import { ArrowUp, Mail, Send } from 'lucide-react'
-import { contact, nav } from '../data/content.js'
+import { nav } from '../data/content.js'
+import { useSiteData } from '../data/SiteData.jsx'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 import { Tile, roundedPath } from './sceneParts.jsx'
 import { Wordmark } from './Logo.jsx'
@@ -177,6 +178,7 @@ function PhoneScene({ f }) {
 
 export default function Footer() {
   const { t } = useLanguage()
+  const { contact } = useSiteData()
   const f = t.footer
 
   return (

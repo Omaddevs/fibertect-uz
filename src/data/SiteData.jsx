@@ -1,28 +1,47 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { pricing as basePricing } from './content.js'
-import { defaultPosts, defaultPrices } from './editable.js'
+import { defaultClients, defaultContact, defaultPosts, defaultPrices, defaultProjects, defaultTestimonials } from './editable.js'
 
-const fallback = { prices: defaultPrices, posts: defaultPosts }
-const SiteDataContext = createContext(fallback)
+const fallback = {
+  prices: defaultPrices,
+  posts: defaultPosts,
+  projects: defaultProjects,
+  clients: defaultClients,
+  testimonials: defaultTestimonials,
+  contact: defaultContact,
+}
 
-// Narx va maqolalar serverdan olinadi. Server javob bermasa, sayt koddagi qiymatlar bilan ishlayveradi.
+const toView = (data, loaded) => ({
+  loaded,
+  pricing: basePricing.map((item, i) => ({ ...item, ...data.prices[i] })),
+  posts: data.posts,
+  projects: data.projects,
+  clients: data.clients,
+  testimonials: data.testimonials,
+  contact: {
+    email: data.contact.email,
+    telegram: { label: `@${data.contact.telegram}`, href: `https://t.me/${data.contact.telegram}` },
+  },
+})
+
+const SiteDataContext = createContext(toView(fallback, false))
+
+// Ma'lumotlar serverdan olinadi. Server javob bermasa, sayt koddagi qiymatlar bilan ishlayveradi.
 export function SiteDataProvider({ children }) {
-  const [data, setData] = useState(fallback)
+  const [view, setView] = useState(() => toView(fallback, false))
 
   useEffect(() => {
     fetch('/api/public/content')
       .then((r) => (r.ok ? r.json() : null))
       .then((remote) => {
-        if (remote?.prices?.length === defaultPrices.length && Array.isArray(remote.posts)) setData(remote)
+        const valid = remote?.prices?.length === defaultPrices.length && Array.isArray(remote.posts) && Array.isArray(remote.projects)
+          && Array.isArray(remote.clients) && Array.isArray(remote.testimonials) && remote.contact?.email
+        setView((current) => (valid ? toView(remote, true) : { ...current, loaded: true }))
       })
-      .catch(() => {})
+      .catch(() => setView((current) => ({ ...current, loaded: true })))
   }, [])
 
-  const pricing = basePricing.map((item, i) => ({ ...item, ...data.prices[i] }))
-  return <SiteDataContext.Provider value={{ pricing, posts: data.posts }}>{children}</SiteDataContext.Provider>
+  return <SiteDataContext.Provider value={view}>{children}</SiteDataContext.Provider>
 }
 
-export function useSiteData() {
-  const value = useContext(SiteDataContext)
-  return value.pricing ? value : { pricing: basePricing, posts: defaultPosts }
-}
+export const useSiteData = () => useContext(SiteDataContext)

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { BLOG_PATH, slugAfter } from '../data/routes.js'
 import { useSiteData } from '../data/SiteData.jsx'
+import { imageFromParagraph } from '../lib/postFormat.js'
 import { navigate, usePath } from '../lib/router.js'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 import BlogScene from './BlogScene.jsx'
@@ -29,6 +30,21 @@ function formatDate(iso, lang) {
   return new Intl.DateTimeFormat(lang, { dateStyle: 'long' }).format(new Date(year, month - 1, day))
 }
 
+function PostCover({ post }) {
+  return post.cover ? <img className="blog-cover-img" src={post.cover} alt="" loading="lazy" /> : <ServiceArt index={post.art} slice />
+}
+
+function Paragraph({ text }) {
+  const image = imageFromParagraph(text)
+  if (!image) return <p>{text}</p>
+  return (
+    <figure className="blog-post__figure">
+      <img src={image.src} alt={image.alt} loading="lazy" />
+      {image.alt && <figcaption>{image.alt}</figcaption>}
+    </figure>
+  )
+}
+
 function PostMeta({ post, text, lang, b }) {
   const date = formatDate(post.date, lang)
   return (
@@ -46,7 +62,7 @@ function PostCard({ post, text, lang, b }) {
     <li className="blog-card">
       <a className="blog-card__inner" href={`${BLOG_PATH}/${post.slug}`}>
         <span className="blog-card__cover">
-          <ServiceArt index={post.art} slice />
+          <PostCover post={post} />
         </span>
         <span className="blog-card__body">
           <PostMeta post={post} text={text} lang={lang} b={b} />
@@ -129,16 +145,16 @@ function BlogPage({ slug, onClose }) {
                 </header>
 
                 <div className="blog-post__cover">
-                  <ServiceArt index={posts[index].art} slice />
+                  <PostCover post={posts[index]} />
                 </div>
 
                 {text.sections.map((s, n) => (
                   <section className="blog-post__section" key={n}>
                     {s.h && <h2>{s.h}</h2>}
-                    {s.p.map((para) => <p key={para}>{para}</p>)}
+                    {s.p.map((para, k) => <Paragraph key={k} text={para} />)}
                     {s.list && (
                       <ul>
-                        {s.list.map((item) => <li key={item}>{item}</li>)}
+                        {s.list.map((item, k) => <li key={k}>{item}</li>)}
                       </ul>
                     )}
                   </section>

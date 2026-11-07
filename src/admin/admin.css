@@ -992,11 +992,14 @@ body {
     order: 3;
     width: 100%;
     margin-top: 10px;
+    overflow-x: auto;
   }
 
   .adm-side__nav a {
-    flex: 1;
+    flex: none;
+    width: auto;
     justify-content: center;
+    white-space: nowrap;
   }
 
   .adm-grid,
@@ -1037,5 +1040,313 @@ body {
   .adm-field input,
   .adm-field textarea {
     transition: none;
+  }
+}
+
+/* ---------- Umumiy qismlar ---------- */
+.adm-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.adm-muted {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #9c9eae;
+}
+
+.adm-count {
+  margin-left: auto;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #9a7bff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  color: #0b1026;
+}
+
+.adm-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.adm-panel__head p {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: #9c9eae;
+}
+
+.adm-grid--flat {
+  gap: 24px;
+}
+
+.adm-list-save {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.adm-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+}
+
+.adm-post__cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.adm-icon:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.adm-field select,
+.adm-select select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(191, 191, 191, 0.2);
+  border-radius: 10px;
+  background: rgb(16, 22, 48);
+  font: inherit;
+  font-size: 0.875rem;
+  color: #fafafa;
+}
+
+/* ---------- Rasm yuklash ---------- */
+.adm-file {
+  display: none;
+}
+
+.adm-image {
+  display: grid;
+  gap: 8px;
+}
+
+.adm-image__label {
+  font-size: 0.8125rem;
+  color: #c4c6cf;
+}
+
+.adm-image__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.adm-image__preview {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 72px;
+  overflow: hidden;
+  border: 1px dashed rgba(191, 191, 191, 0.25);
+  border-radius: 12px;
+  color: #9c9eae;
+}
+
+.adm-image__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.adm-image__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adm-image__hint {
+  font-size: 0.75rem;
+  color: #9c9eae;
+}
+
+.adm-gallery {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adm-gallery li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.adm-gallery img {
+  width: 96px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.adm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adm-chips label {
+  padding: 6px 12px;
+  border: 1px solid rgba(191, 191, 191, 0.2);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  color: #c4c6cf;
+  cursor: pointer;
+}
+
+.adm-chips label.is-active {
+  border-color: #9a7bff;
+  background: rgba(154, 123, 255, 0.18);
+  color: #fafafa;
+}
+
+.adm-chips label:focus-within {
+  outline: 2px solid #9a7bff;
+  outline-offset: 2px;
+}
+
+.adm-chips input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- Mijozlar ---------- */
+.adm-item {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.adm-item__images {
+  display: grid;
+  gap: 16px;
+}
+
+.adm-item__fields {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* ---------- Arizalar ---------- */
+.adm-leads {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adm-lead {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.adm-lead--new {
+  border-color: rgba(154, 123, 255, 0.55);
+}
+
+.adm-lead__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.adm-lead__head h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.adm-lead__meta {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  color: #9c9eae;
+}
+
+.adm-lead__meta a {
+  color: #cfc4ff;
+}
+
+.adm-lead__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adm-lead__message {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.adm-lead__warn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #ffb35c;
+}
+
+.adm-row {
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .adm {
+    grid-template-rows: auto 1fr;
+  }
+
+  .adm-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .adm-item > .adm-icon {
+    justify-self: end;
+  }
+
+  .adm-segment {
+    flex-wrap: wrap;
+    border-radius: 20px;
+  }
+
+  .adm-gallery li {
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+  }
+
+  .adm-gallery img {
+    width: 72px;
+    height: 54px;
   }
 }

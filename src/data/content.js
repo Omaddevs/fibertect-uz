@@ -1,12 +1,7 @@
 // Tilga bog'liq bo'lmagan ma'lumotlar. Barcha matnlar: src/i18n/translations.js
+// Aloqa, loyihalar, mijozlar va fikrlar admin paneldan boshqariladi: editable.js
 import { defaultPrices } from './editable.js'
 import { AppWindow, Bot, Building2, Globe, LayoutDashboard, LayoutTemplate, Lightbulb, Palette, PenTool, ShoppingBag, Smartphone } from 'lucide-react'
-
-// TODO: haqiqiy email va Telegram manzilingizni yozing.
-export const contact = {
-  email: 'hello@fibertech.uz',
-  telegram: { label: '@fibertech', href: 'https://t.me/fibertech' },
-}
 
 // Matnlari translations.js dagi `nav` bo'limida, oxirgisi header'dagi oq tugma.
 export const nav = [
@@ -44,79 +39,6 @@ export const serviceDetails = [
   { slug: 'ui-ux', service: 3, pricing: [6] },
   { slug: 'telegram-bots', service: 4, pricing: [5] },
   { slug: 'branding', service: 5, pricing: [7] },
-]
-
-// Yangi loyiha (manzili routes.js ga ham yoziladi): rasm, `tech` va `gallery` shu yerda, nom va matnlar translations.js dagi
-// `works.items` da. `sample: true` detail sahifada "Namuna" belgisini chiqaradi.
-// `gallery`: rasm obyektlari yoki serviceImages ichidagi tartib raqamlari, `tech`: techIcons kalitlari.
-export const projects = [
-  {
-    slug: 'iau',
-    image: '/works/iau.webp',
-    width: 1472,
-    height: 1068,
-    wide: true,
-    sample: false,
-    logo: '/clients/iau.webp',
-    url: 'https://iau.uz/',
-    tech: ['react', 'reactrouter', 'vite', 'framer', 'swiper', 'django', 'nginx'],
-    // `galleryAlt` translations.js dagi `works.items` da, tartibi shu ro'yxat bilan bir xil.
-    gallery: [
-      { src: '/works/iau-laptop.webp', width: 1122, height: 1402 },
-      { src: '/works/iau-phone.webp', width: 1122, height: 1402 },
-    ],
-  },
-  {
-    slug: 'oak',
-    image: '/works/oak.webp',
-    width: 1672,
-    height: 941,
-    sample: false,
-    logo: '/clients/oak.webp',
-    url: 'https://oak.uz/',
-    tech: ['nextjs', 'typescript', 'postgresql', 'payload', 'nextintl', 'reacthookform', 'zod', 'minio', 'nodemailer', 'docker', 'nginx', 'eslint', 'vitest', 'playwright', 'axe'],
-    gallery: [
-      { src: '/works/oak-hands.webp', width: 1166, height: 1349 },
-      { src: '/works/oak-phone.webp', width: 1121, height: 1403 },
-      { src: '/works/oak-laptop.webp', width: 1122, height: 1402 },
-    ],
-  },
-  {
-    slug: 'taxiline',
-    image: '/works/taxiline.webp',
-    width: 1448,
-    height: 1086,
-    sample: false,
-    logo: '/clients/taxiline.webp',
-    url: 'https://taxiline.uz/',
-    tech: [
-      'react', 'vite', 'javascript', 'tailwindcss', 'reactrouter', 'tanstackquery', 'leaflet', 'threejs', 'socketio', 'dompurify', 'lucide',
-      'typescript', 'tiptap', 'reacteasycrop',
-      'nodejs', 'express', 'prisma', 'zod', 'jwt', 'bcryptjs', 'nodemailer', 'exceljs', 'sanitizehtml',
-      'python', 'aiogram', 'sqlalchemy', 'asyncpg', 'alembic', 'pydantic', 'apscheduler', 'edgetts', 'httpx', 'aiohttp',
-      'postgresql', 'docker', 'dockercompose', 'caddy', 'nginx',
-      'vitest', 'oxlint', 'tsx', 'concurrently',
-    ],
-    gallery: [
-      { src: '/works/taxiline-desktop.webp', width: 1254, height: 1254 },
-      { src: '/works/taxiline-phone.webp', width: 1449, height: 1085 },
-    ],
-  },
-  {
-    slug: 'ayolqadami',
-    image: '/works/ayolqadami.webp',
-    width: 1448,
-    height: 1086,
-    wide: true,
-    sample: false,
-    logo: '/clients/ayolqadami.webp',
-    url: 'https://ayolqadami.uz/',
-    tech: ['react', 'vite', 'leaflet', 'caddy'],
-    gallery: [
-      { src: '/works/ayolqadami-devices.webp', width: 1618, height: 972 },
-      { src: '/works/ayolqadami-laptop.webp', width: 1024, height: 1535 },
-    ],
-  },
 ]
 
 // Lentadagi texnologiyalar: `icon` kaliti src/data/techIcons.js dan.
@@ -184,29 +106,3 @@ export const projectTechnologies = [
   { name: 'tsx', icon: 'tsx', color: '#4a9be0' },
   { name: 'concurrently', icon: 'concurrently', color: '#ffd43b' },
 ]
-
-// Haqiqiy mijozlaringiz. Faqat ruxsati olingan kompaniyalarni qo'shing.
-// Ro'yxat bo'sh bo'lsa, e'lon qilingan saytda bu qism ko'rinmaydi.
-// Namuna: { name: 'Kompaniya nomi', logo: '/clients/kompaniya.svg', url: 'https://kompaniya.uz/' }
-// `url` ixtiyoriy: berilsa, karta shu saytni yangi oynada ochadi.
-// `slot` ixtiyoriy: bento to'rdagi karta raqami (1 dan). Har bir mijozda boshqa raqam bo'lsin;
-// berilmasa, mijoz birinchi bo'sh kartaga tushadi.
-// `project` ixtiyoriy: `works.items` dagi tartib raqami, mijoz nomi shu orqali har bir tilda chiqadi.
-export const clients = [
-  { name: 'International Agriculture University', logo: '/clients/iau.webp', url: 'https://iau.uz/', slot: 1, project: 0 },
-  { name: 'Oliy attestatsiya komissiyasi', logo: '/clients/oak.webp', url: 'https://oak.uz/', slot: 6, project: 1 },
-  { name: 'TaxiLine', logo: '/clients/taxiline.webp', url: 'https://taxiline.uz/', slot: 5, project: 2 },
-  { name: 'AyolQadami', logo: '/clients/ayolqadami.webp', url: 'https://ayolqadami.uz/', slot: 2, project: 3 },
-]
-
-// Haqiqiy, ruxsat bilan olingan fikrlar. `quote` va `role` har bir tilda yoziladi.
-// Namuna:
-// {
-//   name: 'Ism Familiya',
-//   photo: '/clients/ism.webp',
-//   logo: '/clients/kompaniya.svg',
-//   company: 'Kompaniya nomi',
-//   role: { uz: '...', ru: '...', en: '...' },
-//   quote: { uz: '...', ru: '...', en: '...' },
-// }
-export const testimonials = []

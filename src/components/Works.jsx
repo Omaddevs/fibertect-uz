@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { ArrowRight } from 'lucide-react'
-import { projects } from '../data/content.js'
+import { useSiteData } from '../data/SiteData.jsx'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 import { PROJECTS_PATH, slugAfter } from '../data/routes.js'
 import { navigate, usePath } from '../lib/router.js'
@@ -8,7 +8,9 @@ import ProjectDetail from './ProjectDetail.jsx'
 import Reveal from './Reveal.jsx'
 
 export default function Works() {
-  const { works } = useLanguage().t
+  const { t, lang } = useLanguage()
+  const { works } = t
+  const { projects, loaded } = useSiteData()
   const requested = slugAfter(usePath(), PROJECTS_PATH)
   const slug = projects.some((p) => p.slug === requested) ? requested : null
   // Sahifa ichidan ochilganmi: shunda "orqaga" foydalanuvchini o'sha joyiga qaytaradi.
@@ -17,6 +19,11 @@ export default function Works() {
   useEffect(() => {
     if (!slug) openedHere.current = false
   }, [slug])
+
+  // Ma'lumot yuklangach ham topilmagan loyiha: o'chirilgan yoki eski havola.
+  useEffect(() => {
+    if (loaded && requested && !slug) navigate('/', { replace: true })
+  }, [loaded, requested, slug])
 
   const close = useCallback(() => {
     if (openedHere.current) {
@@ -34,8 +41,8 @@ export default function Works() {
       </h2>
 
       <div className="works__grid">
-        {projects.map((p, i) => {
-          const w = works.items[i]
+        {projects.map((p) => {
+          const w = p.texts[lang]
           return (
             <Reveal className={`work ${p.wide ? 'work--wide' : ''}`} key={p.slug}>
               <a

@@ -2,7 +2,16 @@
 //   ## Sarlavha        yangi bo'lim
 //   - Band             ro'yxat bandi
 //   Oddiy matn         xatboshi (bo'sh qator bilan ajratiladi)
+//   ![izoh](/uploads/x.webp)   yuklangan rasm (alohida qatorda)
 // HTML ishlatilmaydi: matn saytda doim oddiy matn bo'lib chiqadi.
+const IMAGE_LINE = /^!\[([^\]]*)\]\((\/uploads\/[a-f0-9]{32}\.(?:webp|png|jpg))\)$/
+
+// Xatboshi aslida rasm bo'lsa { alt, src }, aks holda null.
+export function imageFromParagraph(text) {
+  const match = text.match(IMAGE_LINE)
+  return match ? { alt: match[1], src: match[2] } : null
+}
+
 export function parseBody(source) {
   const sections = []
   let current = null
@@ -27,6 +36,10 @@ export function parseBody(source) {
       if (line.startsWith('## ')) {
         flush()
         open(line.slice(3).trim())
+      } else if (IMAGE_LINE.test(line)) {
+        flush()
+        if (!current || current.list) open()
+        current.p.push(line)
       } else if (line.startsWith('- ')) {
         flush()
         if (!current) open()

@@ -4,6 +4,7 @@ import { api, formatNumber } from './api.js'
 
 const SEARCH_CONSOLE_URL = 'https://search.google.com/search-console/performance/search-analytics?resource_id=sc-domain%3Afibertech.uz'
 const RANGES = [7, 30, 90]
+const dateTime = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Asia/Tashkent', dateStyle: 'short', timeStyle: 'short' })
 const SOURCE_LABELS = { search: 'Qidiruv tizimlari', social: 'Ijtimoiy tarmoqlar', link: 'Boşqa saytlardagi havolalar', direct: 'Töğridan-töğri kirganlar' }
 const DEVICE_LABELS = { desktop: 'Kompyuter', mobile: 'Telefon', tablet: 'Planşet' }
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
@@ -136,6 +137,86 @@ function BarList({ rows, empty }) {
 const toRows = (items, label = (x) => x, extra) => items.map((i) => ({ label: label(i.name), value: i.visitors, ...extra?.(i) }))
 const linkLabel = (url) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')
 
+function Conversions({ data }) {
+  return (
+    <section className="adm-card adm-panel">
+      <h2>Natijalar</h2>
+      <p className="adm-muted">
+        {data.visitors > 0
+          ? `Tanlangan davrda ${formatNumber(data.visitors)} kişi ariza yubordi yoki boğlanişga ötdi. Bu tashrif buyuruvçilarning ${String(data.rate).replace('.', ',')}%i.`
+          : 'Tanlangan davrda hali hiç kim ariza yubormadi va boğlanişga ötmadi.'}
+      </p>
+      <div className="adm-grid adm-grid--flat">
+        <div>
+          <h3>Harakatlar</h3>
+          <BarList
+            rows={[
+              { label: 'Forma orqali ariza', value: data.form },
+              { label: 'Telegram’ga ötiş', value: data.telegram },
+              { label: 'Email’ni bosiş', value: data.email },
+            ]}
+            empty=""
+          />
+        </div>
+        <div>
+          <h3>Qaysi manbadan</h3>
+          <BarList rows={toRows(data.bySource, (n) => SOURCE_LABELS[n] ?? n)} empty="Hali natija yöq." />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function SearchConsole() {
+  const [data, setData] = useState(null)
+
+  useEffect(() => {
+    let live = true
+    api('/search-console').then((result) => live && setData(result)).catch(() => {})
+    return () => {
+      live = false
+    }
+  }, [])
+
+  if (!data?.configured) return null
+  if (data.error) {
+    return (
+      <section className="adm-card adm-panel">
+        <h2>Google qidiruvi</h2>
+        <p className="adm-error adm-error--inline" role="alert">{data.error}</p>
+      </section>
+    )
+  }
+
+  return (
+    <section className="adm-card adm-panel">
+      <h2>Google qidiruvi</h2>
+      <p className="adm-muted">
+        {data.from} – {data.to}: {formatNumber(data.totals.clicks)} bosiş, {formatNumber(data.totals.impressions)} körsatiş.
+        {' '}Yangilangan: {dateTime.format(data.fetchedAt)}. Google ma’lumotni 2-3 kun keçikib beradi.
+      </p>
+      {data.queries.length === 0 ? <p className="adm-empty">Google hali sözlarni körsatmayapti.</p> : (
+        <div className="adm-scroll">
+          <table className="adm-table">
+            <thead><tr><th>Söz</th><th>Bosiş</th><th>Körsatiş</th><th>CTR</th><th>Örin</th></tr></thead>
+            <tbody>
+              {data.queries.map((q) => (
+                <tr key={q.key}>
+                  <td>{q.key}</td>
+                  <td>{formatNumber(q.clicks)}</td>
+                  <td>{formatNumber(q.impressions)}</td>
+                  <td>{(q.ctr * 100).toFixed(1)}%</td>
+                  <td>{q.position.toFixed(1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  )
+}
+
 export default function Analytics() {
   const [days, setDays] = useState(30)
   const [report, setReport] = useState(null)
@@ -186,6 +267,8 @@ export default function Analytics() {
             </Tile>
           </section>
 
+          <Conversions data={report.conversions} />
+
           <section className="adm-card adm-panel">
             <h2>Kunlik tashrif buyuruvçilar</h2>
             <VisitorsChart daily={report.daily} />
@@ -203,6 +286,8 @@ export default function Analytics() {
               </div>
             </details>
           </section>
+
+          <SearchConsole />
 
           <div className="adm-grid">
             <section className="adm-card adm-panel">

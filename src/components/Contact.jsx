@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ArrowUpRight, Check, Info, Mail, Send } from 'lucide-react'
-import { contact } from '../data/content.js'
+import { useSiteData } from '../data/SiteData.jsx'
 import { useLanguage } from '../i18n/LanguageContext.jsx'
 
 function ContactLink({ href, icon: Icon, label, value, external }) {
@@ -21,20 +21,32 @@ function ContactLink({ href, icon: Icon, label, value, external }) {
 }
 
 export default function Contact() {
-  const { contact: c, services } = useLanguage().t
-  const [sent, setSent] = useState(false)
+  const { t, lang } = useLanguage()
+  const { contact: c, services } = t
+  const { contact } = useSiteData()
+  const [status, setStatus] = useState('idle')
 
-  // Backend yo'q: forma foydalanuvchining pochta ilovasini tayyor xat bilan ochadi.
-  const handleSubmit = (e) => {
+  // Ariza serverda saqlanadi. Xato bo'lsa forma tozalanmaydi: yozilgan matn yo'qolmaydi.
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const data = new FormData(e.currentTarget)
-    const subject = `${c.mail.subject}: ${data.get('name')}`
-    const lines = [`${c.mail.name}: ${data.get('name')}`, `${c.mail.reach}: ${data.get('reach')}`]
-    if (data.get('service')) lines.push(`${c.mail.service}: ${data.get('service')}`)
-    const body = `${lines.join('\n')}\n\n${data.get('message')}`
-    window.location.href = `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-    setSent(true)
+    const form = e.currentTarget
+    const data = Object.fromEntries(new FormData(form))
+    setStatus('sending')
+    try {
+      const response = await fetch('/api/public/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, lang }),
+      })
+      if (!response.ok) throw new Error(String(response.status))
+      form.reset()
+      setStatus('sent')
+    } catch {
+      setStatus('error')
+    }
   }
+
+  const notes = { idle: c.noteIdle, sending: c.sending, sent: c.noteSent, error: c.noteError }
 
   return (
     <section className="contact" id="contact">
@@ -71,11 +83,11 @@ export default function Contact() {
           <form className="contact__form" onSubmit={handleSubmit}>
             <label className="contact__field contact__field--half">
               <span className="contact__label">{c.name}</span>
-              <input name="name" type="text" autoComplete="name" placeholder={c.namePlaceholder} required />
+              <input name="name" type="text" autoComplete="name" placeholder={c.namePlaceholder} minLength={2} maxLength={100} required />
             </label>
             <label className="contact__field contact__field--half">
               <span className="contact__label">{c.reach}</span>
-              <input name="reach" type="text" placeholder={c.reachPlaceholder} required />
+              <input name="reach" type="text" placeholder={c.reachPlaceholder} minLength={3} maxLength={100} required />
             </label>
 
             <fieldset className="contact__services">
@@ -93,19 +105,22 @@ export default function Contact() {
 
             <label className="contact__field contact__field--grow">
               <span className="contact__label">{c.message}</span>
-              <textarea name="message" rows="4" placeholder={c.messagePlaceholder} required />
+              <textarea name="message" rows="4" placeholder={c.messagePlaceholder} minLength={3} maxLength={3000} required />
             </label>
 
+            {/* Odam ko'rmaydi, botlar to'ldiradi. */}
+            <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1 }} />
+
             <div className="contact__foot">
-              <button type="submit" className="cta-btn cta-btn--primary contact__submit">
+              <button type="submit" className="cta-btn cta-btn--primary contact__submit" disabled={status === 'sending'}>
                 {c.submit}
                 <span className="cta-btn__icon">
                   <Send size={20} strokeWidth={1.8} aria-hidden="true" />
                 </span>
               </button>
-              <p className={`contact__note ${sent ? 'is-sent' : ''}`} role="status">
-                {sent ? <Check size={16} strokeWidth={2} aria-hidden="true" /> : <Info size={16} strokeWidth={1.7} aria-hidden="true" />}
-                {sent ? c.noteSent : c.noteIdle}
+              <p className={`contact__note ${status === 'sent' ? 'is-sent' : ''}`} role="status">
+                {status === 'sent' ? <Check size={16} strokeWidth={2} aria-hidden="true" /> : <Info size={16} strokeWidth={1.7} aria-hidden="true" />}
+                {notes[status]}
               </p>
             </div>
           </form>
